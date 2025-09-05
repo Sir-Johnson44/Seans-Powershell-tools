@@ -1,0 +1,14 @@
+# Define route tables and routes
+$RouteTables = @("rtb-e56be481", "rtb-085fff148dab7bcea")
+$Routes = @(
+    @{CIDR="168.60.193.0/24"; GatewayID="vgw-6fafcd4c"}
+    @{CIDR="168.60.192.0/24"; GatewayID="vgw-6fafcd4c"}
+    @{CIDR="168.32.128.32/28"; GatewayID="vgw-6fafcd4c"}
+)
+
+# Loop through each route table and each route
+foreach ($RouteTable in $RouteTables) {
+    foreach ($Route in $Routes) {
+        aws ec2 create-route --route-table-id $RouteTable --destination-cidr-block $Route.CIDR --gateway-id $Route.GatewayID --region us-gov-west-1
+    }
+}

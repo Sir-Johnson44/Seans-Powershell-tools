@@ -1,0 +1,16 @@
+# Define the Security Group ID
+$SecurityGroupId = "sg-0123456789abcdef"
+
+# Define a list of ports and source IPs
+$Rules = @(
+    @{Port=22; Protocol="tcp"; SourceIP="203.0.113.1/32"}
+    @{Port=80; Protocol="tcp"; SourceIP="0.0.0.0/0"}
+    @{Port=443; Protocol="tcp"; SourceIP="0.0.0.0/0"}
+    @{Port=3389; Protocol="tcp"; SourceIP="198.51.100.1/32"}
+)
+
+# Loop through each rule and add it to the security group
+foreach ($Rule in $Rules) {
+    aws ec2 authorize-security-group-ingress --group-id $SecurityGroupId --protocol $Rule.Protocol --port $Rule.Port --cidr $Rule.SourceIP --region us-gov-west-1
+    Write-Output "Added rule: Port $($Rule.Port) Protocol $($Rule.Protocol) Source $($Rule.SourceIP)"
+}

@@ -1,0 +1,16 @@
+# set your desired region
+$region = "us-east-1" 
+
+#set your list of instances to check
+$instances = "i-622c4753","i-1b214a2a","i-9372a300","i-4b72a3d8","i-2874a5bb","i-0310916ced5f2a526","i-0c750395","i-207402b9","i-727402eb" # Replace with your instance IDs
+
+#List volume types of all attached volumes on specified instances
+foreach ($instance in $instances) {
+    $volumes = Get-EC2Volume -Filter @{ Name = "attachment.instance-id"; Values = $instance } -Region $region
+    
+    foreach ($volume in $volumes) {
+        $volumeId = $volume.VolumeId
+        $volumeType = $volume.VolumeType
+        Write-Output "Volume $volumeId attached to instance $instance has a volume type of $volumeType."
+    }
+}
