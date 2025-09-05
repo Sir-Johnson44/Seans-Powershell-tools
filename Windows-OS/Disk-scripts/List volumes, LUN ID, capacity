@@ -17,3 +17,4 @@ Get-WmiObject -Query "SELECT * FROM Win32_DiskDrive" | ForEach-Object {
         }
     }
 } | Format-Table -AutoSize
+#this is a test comment
