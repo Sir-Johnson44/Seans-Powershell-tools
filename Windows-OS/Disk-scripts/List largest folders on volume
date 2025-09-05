@@ -1,0 +1,14 @@
+$driveLetter = "C"
+$topN = 10
+
+$folders = Get-ChildItem -Path "${driveLetter}:\" -Directory -Force -ErrorAction SilentlyContinue |
+    ForEach-Object {
+        [PSCustomObject]@{
+            Name = $_.Name
+            Path = $_.FullName
+            SizeGB = [math]::Round((Get-ChildItem -Path $_.FullName -Recurse -Force -ErrorAction SilentlyContinue | Measure-Object -Property Length -Sum).Sum / 1GB, 2)
+        }
+    } | Sort-Object -Property SizeGB -Descending | Select-Object -First $topN
+
+Write-Host "The $topN largest folders on $driveLetter are:"
+$folders | Format-Table -AutoSize -Property Name, SizeGB

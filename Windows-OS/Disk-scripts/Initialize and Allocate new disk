@@ -1,0 +1,67 @@
+#set the three variables below:
+$volumeIdentifier = "D_Drive" #this is the volume label you want to see in the OS
+$driveLetter = "D" #this is the volume letter you want to set. PUT ONLY THE LETTER, NO COLON!
+$NewDriveSizeGB = 100 #This is the size of the new disk in GB
+
+$sizeInBytes = $NewDriveSizeGB * 1GB
+
+try {
+    # Get the disk that is not yet initialized and matches the specified size
+    $disk = Get-Disk | Where-Object { $_.OperationalStatus -eq 'Online' -and $_.PartitionStyle -eq 'RAW' -and $_.Size -eq $sizeInBytes } | Select-Object -First 1
+
+    if ($null -eq $disk) {
+        Write-Error "No uninitialized disks found with the specified size."
+        return
+    }
+
+    # Initialize the disk
+    Initialize-Disk -Number $disk.Number -PartitionStyle GPT -PassThru | Out-Null
+
+    # Create a new partition
+    $partition = New-Partition -DiskNumber $disk.Number -UseMaximumSize -AssignDriveLetter
+
+    # Format the partition
+    Format-Volume -DriveLetter $partition.DriveLetter -FileSystem NTFS -NewFileSystemLabel $VolumeIdentifier -Confirm:$false
+
+    # Change the drive letter
+    $partition | Set-Partition -NewDriveLetter $driveLetter
+
+    Write-Host "Volume '$volumeIdentifier' has been initialized and formatted. Drive letter set to '$driveLetter'."
+}
+catch {
+    Write-Error "An error occurred: $_"
+}
+
+The above version creates a temporary drive letter during the new-partition command because of the -AssignDriveLetter flag, but this causes confusion in the output, as it will show the temporary drive letter along with the final volume label. The V2 script below should fix that as it uses -DriveLetter $driveLetter instead and removes the section to #Change the Drive letter . This v2 script needs to be tested in a lab environment again first before using on customer boxes just to make sure.
+
+
+#set the three variables below:
+$volumeIdentifier = "U_Drive" #this is the volume label you see in the OS
+$driveLetter = "U" #this is the volume letter you want to set 
+$NewDriveSizeGB = 3900 #This is the size of the new disk
+
+$sizeInBytes = $NewDriveSizeGB * 1GB
+
+try {
+    # Get the disk that is not yet initialized and matches the specified size
+    $disk = Get-Disk | Where-Object { $_.OperationalStatus -eq 'Online' -and $_.PartitionStyle -eq 'RAW' -and $_.Size -eq $sizeInBytes } | Select-Object -First 1
+
+    if ($null -eq $disk) {
+        Write-Error "No uninitialized disks found with the specified size."
+        return
+    }
+
+    # Initialize the disk
+    Initialize-Disk -Number $disk.Number -PartitionStyle GPT -PassThru | Out-Null
+
+    # Create a new partition and assign the final drive letter
+    $partition = New-Partition -DiskNumber $disk.Number -UseMaximumSize -DriveLetter $driveLetter
+
+    # Format the partition
+    Format-Volume -DriveLetter $partition.DriveLetter -FileSystem NTFS -NewFileSystemLabel $VolumeIdentifier -Confirm:$false
+
+    Write-Host "Volume '$volumeIdentifier' has been initialized and formatted. Drive letter set to '$driveLetter'."
+}
+catch {
+    Write-Error "An error occurred: $_"
+}

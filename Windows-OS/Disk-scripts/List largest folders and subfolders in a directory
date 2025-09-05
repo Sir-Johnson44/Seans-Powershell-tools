@@ -1,0 +1,27 @@
+# Specify folder path
+$folderPath = "C:\Windows"
+
+# Validate if the path exists
+if (Test-Path $folderPath -PathType Container) {
+    
+    # Get all folders and their sizes
+    $folderSizes = Get-ChildItem $folderPath -Directory | ForEach-Object {
+        [PSCustomObject]@{
+            Folder = $_.FullName
+            SizeGB = [math]::Round((Get-ChildItem $_.FullName -Recurse | Measure-Object -Property Length -Sum).Sum / 1GB, 2)
+        }
+    }
+
+    # Sort by size in descending order
+    $sortedFolders = $folderSizes | Sort-Object -Property SizeGB -Descending
+
+    # Display the 5 largest folders
+    $top5Folders = $sortedFolders | Select-Object -First 5
+
+    # Output the results
+    Write-Host "Top 5 largest folders in $folderPath are"
+    $top5Folders | Format-Table -AutoSize
+
+} else {
+    Write-Host "The specified folder path does not exist."
+}

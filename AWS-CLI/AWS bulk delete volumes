@@ -1,0 +1,14 @@
+# Create AWS region variable
+$region = "us-east-1"  # Replace with your desired region code (us-east-1, us-east-2, us-west-1, us-west-2, etc)
+
+# Set the AWS region for the current session
+Set-DefaultAWSRegion -Region $region
+
+# Comma-separated list of volume IDs
+$VolumeIds = "vol-1234", "vol-4321", "vol-3241"
+
+# Iterate over each volume ID
+foreach ($Id in $VolumeIds) {
+    # Delete the volume
+    Remove-EC2Volume -VolumeId $Id -force
+}

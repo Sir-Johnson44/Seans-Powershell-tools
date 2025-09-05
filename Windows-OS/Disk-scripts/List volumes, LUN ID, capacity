@@ -1,0 +1,19 @@
+Get-WmiObject -Query "SELECT * FROM Win32_DiskDrive" | ForEach-Object {
+    $disk = $_
+    $partitions = "ASSOCIATORS OF {Win32_DiskDrive.DeviceID='$($disk.DeviceID)'} WHERE AssocClass = Win32_DiskDriveToDiskPartition"
+    
+    Get-WmiObject -Query $partitions | ForEach-Object {
+        $partition = $_
+        $logicalDisks = "ASSOCIATORS OF {Win32_DiskPartition.DeviceID='$($partition.DeviceID)'} WHERE AssocClass = Win32_LogicalDiskToPartition"
+        
+        Get-WmiObject -Query $logicalDisks | ForEach-Object {
+            $logicalDisk = $_
+            [PSCustomObject]@{
+                DriveLetter = $logicalDisk.DeviceID
+                VolumeLabel = $logicalDisk.VolumeName
+                SizeGB      = [math]::Round($logicalDisk.Size / 1GB, 2)
+                LUNID       = $disk.ScsiLogicalUnit
+            }
+        }
+    }
+} | Format-Table -AutoSize

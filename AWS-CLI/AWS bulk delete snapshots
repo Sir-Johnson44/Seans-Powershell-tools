@@ -1,0 +1,14 @@
+# Create AWS region variable
+$region = "us-east-1"  # Replace with your desired region code (us-east-1, us-east-2, us-west-1, us-west-2, etc)
+
+# Set the AWS region for the current session
+Set-DefaultAWSRegion -Region $region
+
+# Comma-separated list of snapshot IDs
+$SnapshotIds = "snap-1234", "snap-4321", "snap-3241"
+
+# Iterate over each snapshot ID
+foreach ($Id in $SnapshotIds) {
+    # Delete the snapshot
+    Remove-EC2Snapshot -SnapshotId $Id -force
+}

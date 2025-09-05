@@ -1,0 +1,51 @@
+# Set your drive letter and new space here
+$drive = "C"  # Example: 'D' - DO NOT PUT A COLON IN WITH THE VOLUME LETTER!!
+$newSpace = "MAX"  # Specify the size like '20GB' or set to 'MAX' for maximum available space
+
+function Extend-DrivePartition {
+    param (
+        [string]$drive,
+        [string]$NewSize
+    )
+
+    try {
+        # Get the partition
+        $partition = Get-Partition -DriveLetter $drive -ErrorAction Stop
+
+        if ($NewSize -eq "MAX") {
+            # Get maximum size available
+            $maxSize = (Get-PartitionSupportedSize -DriveLetter $drive).SizeMax
+            Resize-Partition -DriveLetter $drive -Size $maxSize
+            Write-Host "Partition extended to the maximum available size."
+        }
+        else {
+            # Convert to bytes and resize
+            $sizeBytes = [System.Management.Automation.LanguagePrimitives]::ConvertTo($NewSize, [long])
+            Resize-Partition -DriveLetter $drive -Size $sizeBytes
+            Write-Host "Partition extended to $NewSize."
+        }
+    }
+    catch {
+        Write-Error "An error occurred: $_"
+    }
+}
+
+# Call the function and show the completed output
+Extend-DrivePartition -drive $drive -NewSize $newSpace
+
+# Function to convert bytes to gigabytes
+function Convert-ToGB {
+    param([int64]$size)
+    return [math]::Round($size / 1GB, 2)
+}
+
+# Get volume information
+$volumes = Get-WmiObject Win32_Volume | Where-Object {$_.DriveType -eq 3}
+
+# Output information
+write-host ""
+write-host "Output:"
+write-host "Here are the current volumes, their total capacity, and current free space..."
+$volumes | Select-Object DriveLetter,
+    @{Name="TotalSize(GB)"; Expression={Convert-ToGB $_.Capacity}},
+    @{Name="FreeSpace(GB)"; Expression={Convert-ToGB $_.FreeSpace}}
